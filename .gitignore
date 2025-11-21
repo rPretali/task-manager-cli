@@ -1,0 +1,19 @@
+# Build directory
+target/
+
+# VS Code settings
+.vscode/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
