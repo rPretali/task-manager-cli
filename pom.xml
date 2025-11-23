@@ -19,7 +19,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
+    <groupId>it.unimib</groupId>
     <artifactId>task-manager-cli</artifactId>
     <version>1.0.0</version>
 
@@ -28,7 +28,7 @@
       They may appear in generated documentation or tools.
     -->
     <name>Task Manager CLI</name>
-    <description>Minimal Java CLI app for CI/CD assignment</description>
+    <description>Minimal Java CLI app</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
