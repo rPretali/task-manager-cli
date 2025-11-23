@@ -1,4 +1,4 @@
-package com.example.taskmanager;
+package it.unimib.taskmanager;
 
 import java.util.List;
 import java.util.Scanner;

@@ -1,4 +1,4 @@
-package com.example.taskmanager;
+package it.unimib.taskmanager;
 
 import java.util.ArrayList;
 import java.util.List;
