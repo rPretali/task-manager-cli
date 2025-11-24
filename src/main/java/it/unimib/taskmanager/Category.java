@@ -20,7 +20,7 @@ public class Category {
     private final int id;
 
     /**
-     * Human readable name of the category, for example "Work" or "University".
+     * Human readable name of the category.
      */
     private String name;
 
@@ -64,7 +64,6 @@ public class Category {
 
     /**
      * Returns a string representation of this category.
-     * Useful for logging and for showing information in the CLI.
      */
     @Override
     public String toString() {
@@ -76,7 +75,6 @@ public class Category {
 
     /**
      * Two Category objects are considered equal if they have the same id.
-     * This allows us to compare categories safely and to use them in collections.
      *
      * @param o other object to compare
      * @return true if the other object is a Category with the same id

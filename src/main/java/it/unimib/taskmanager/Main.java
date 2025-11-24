@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Scanner;
 
 /**
- * Entry point and CLI (Command Line Interface) for the Task Manager application.
+ * Entry point and CLI for the Task Manager application.
  *
  * Responsibilities:
  * - Show menus to the user
@@ -314,7 +314,7 @@ public class Main {
     }
 
     // ---------------------------------------------------------------------
-    // Task actions (to be completed)
+    // Task actions
     // ---------------------------------------------------------------------
 
     private static void listTasks(Application app) {

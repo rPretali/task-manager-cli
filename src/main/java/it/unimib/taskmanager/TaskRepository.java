@@ -105,7 +105,6 @@ public class TaskRepository {
 
     /**
      * Removes all tasks and resets the id counter.
-     * Useful for unit tests where a clean state is needed.
      */
     public void clear() {
         tasks.clear();

@@ -23,7 +23,6 @@ public class Task {
 
     /**
      * Short, human readable title for the task.
-     * Example: "Study CI/CD", "Do the shopping".
      */
     private String title;
 
@@ -34,19 +33,18 @@ public class Task {
 
     /**
      * Category that this task belongs to.
-     * For example: "Work", "University", "Home".
      */
     private Category category;
 
     /**
      * Flag that indicates whether the task is completed or not.
-     * false = pending, true = done.
+     * false = pending (not done), true = done.
      */
     private boolean done;
 
     /**
      * Constructs a new Task.
-     * By default, a new task is created in the "not done" state.
+     * By default, a new task is created in the pending state.
      *
      * @param id          unique identifier of the task
      * @param title       short title
@@ -149,7 +147,6 @@ public class Task {
 
     /**
      * Returns a string representation of this task.
-     * Useful for logging and for showing information in the CLI.
      */
     @Override
     public String toString() {
@@ -163,7 +160,6 @@ public class Task {
 
     /**
      * Two Task objects are considered equal if they have the same id.
-     * This allows us to compare tasks safely and to use them in collections.
      *
      * @param o other object to compare
      * @return true if the other object is a Task with the same id

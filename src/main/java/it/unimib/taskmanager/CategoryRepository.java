@@ -120,7 +120,6 @@ public class CategoryRepository {
 
     /**
      * Removes all categories and resets the id counter.
-     * Useful for unit tests where a clean state is needed.
      */
     public void clear() {
         categories.clear();
