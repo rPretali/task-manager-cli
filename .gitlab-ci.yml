@@ -1,8 +1,10 @@
-image: maven:3.9.6-eclipse-temurin-21
+image: maven:3.9.6-eclipse-temurin-17
 
 stages:
   - build
   - test
+  - analysis
+  - documentation
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
@@ -12,7 +14,7 @@ cache:
     - .m2/repository/
 
 before_script:
-  - echo "Using Maven from $MAVEN_HOME"
+  - echo "Using Maven with JDK 17"
 
 build:
   stage: build
@@ -21,8 +23,47 @@ build:
   artifacts:
     paths:
       - target/
+    expire_in: 1 hour
 
 test:
   stage: test
   script:
     - mvn test
+  artifacts:
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+    paths:
+      - target/surefire-reports/
+    expire_in: 30 days
+
+checkstyle:
+  stage: analysis
+  script:
+    - mvn checkstyle:check
+  allow_failure: true
+  artifacts:
+    reports:
+      junit: target/checkstyle-result.xml
+    paths:
+      - target/checkstyle-result.xml
+    expire_in: 30 days
+
+spotbugs:
+  stage: analysis
+  script:
+    - mvn spotbugs:check
+  allow_failure: true
+  artifacts:
+    paths:
+      - target/spotbugsXml.xml
+    expire_in: 30 days
+
+javadoc:
+  stage: documentation
+  script:
+    - mvn javadoc:javadoc
+  artifacts:
+    paths:
+      - target/site/apidocs/
+    expire_in: 30 days
+  allow_failure: true
