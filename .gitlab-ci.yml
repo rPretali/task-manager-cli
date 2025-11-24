@@ -5,6 +5,7 @@ stages:
   - test
   - analysis
   - documentation
+  - package
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
@@ -24,17 +25,6 @@ build:
     paths:
       - target/
     expire_in: 1 hour
-
-test:
-  stage: test
-  script:
-    - mvn test
-  artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
-    paths:
-      - target/surefire-reports/
-    expire_in: 30 days
 
 checkstyle:
   stage: analysis
@@ -58,6 +48,29 @@ spotbugs:
       - target/spotbugsXml.xml
     expire_in: 30 days
 
+test:
+  stage: test
+  script:
+    - mvn test
+  artifacts:
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+    paths:
+      - target/surefire-reports/
+    expire_in: 30 days
+
+package:
+  stage: package
+  script:
+    - mvn package -DskipTests
+  artifacts:
+    paths:
+      - target/task-manager-cli-*.jar
+    expire_in: 90 days
+    name: "task-manager-cli-$CI_COMMIT_SHORT_SHA"
+  only:
+    - main
+
 javadoc:
   stage: documentation
   script:
@@ -67,3 +80,4 @@ javadoc:
       - target/site/apidocs/
     expire_in: 30 days
   allow_failure: true
+
