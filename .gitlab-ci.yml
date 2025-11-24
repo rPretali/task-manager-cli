@@ -26,4 +26,3 @@ test:
   stage: test
   script:
     - mvn test
-    
