@@ -1,54 +1,95 @@
+# CI/CD pipeline for the Task Manager CLI Java project.
+# Stages follow the assignment: build -> verify -> test -> package -> release -> docs.
+
 image: maven:3.9.6-eclipse-temurin-17
 
 stages:
   - build
-  - analysis
+  - verify
   - test
   - package
-  - documentation
-
+  - release
+  - docs
 
 variables:
+  # Use a local Maven repository inside the job workspace
+  # to avoid downloading dependencies from scratch on each job.
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
 
 cache:
   paths:
     - .m2/repository/
 
+# Default step executed before each job that does not override before_script.
 before_script:
-  - echo "Using Maven with JDK 17"
+  - echo "Using Maven with Temurin JDK 17"
+  - mvn -version
 
+# --------------------------------------------------------------------------
+# BUILD STAGE
+# --------------------------------------------------------------------------
+
+# Compile the project and resolve all Maven dependencies.
 build:
   stage: build
   script:
     - mvn clean compile
   artifacts:
+    # Compiled classes and other build outputs.
     paths:
       - target/
-    expire_in: 1 hour
+    expire_in: 1 day
 
+# --------------------------------------------------------------------------
+# VERIFY STAGE
+# Static and dynamic analysis jobs run in parallel.
+# --------------------------------------------------------------------------
+
+# Static analysis - code style and formatting (Checkstyle).
 checkstyle:
-  stage: analysis
+  stage: verify
   script:
     - mvn checkstyle:check
+  # Do not block the pipeline because of style violations,
+  # but keep the report available for inspection.
   allow_failure: true
   artifacts:
-    reports:
-      junit: target/checkstyle-result.xml
     paths:
       - target/checkstyle-result.xml
-    expire_in: 30 days
+    expire_in: 7 days
 
+# Static analysis - potential bugs and bad patterns (SpotBugs).
 spotbugs:
-  stage: analysis
+  stage: verify
   script:
     - mvn spotbugs:check
+  # Treat findings as quality feedback, not as hard blockers.
   allow_failure: true
   artifacts:
     paths:
       - target/spotbugsXml.xml
+    expire_in: 7 days
+
+# Dynamic analysis - run the unit test suite as part of the verify stage.
+# This job provides a first dynamic execution of the code in parallel
+# with the static analysis jobs.
+verify-tests:
+  stage: verify
+  script:
+    - mvn test
+  artifacts:
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+    paths:
+      - target/surefire-reports/
     expire_in: 30 days
 
+# --------------------------------------------------------------------------
+# TEST STAGE
+# --------------------------------------------------------------------------
+
+# Dedicated test stage, as requested by the assignment table:
+# run 'mvn test' and expose JUnit XML reports.
 test:
   stage: test
   script:
@@ -60,25 +101,59 @@ test:
       - target/surefire-reports/
     expire_in: 30 days
 
+# --------------------------------------------------------------------------
+# PACKAGE STAGE
+# --------------------------------------------------------------------------
+
+# Build the executable JAR that can be distributed or used by the release stage.
 package:
   stage: package
   script:
+    # Tests already run in verify and test stages, so we can skip them here.
     - mvn package -DskipTests
   artifacts:
+    # Final JAR artifact produced by Maven.
     paths:
       - target/task-manager-cli-*.jar
     expire_in: 90 days
+    # Include the short commit SHA in the artifact name for traceability.
     name: "task-manager-cli-$CI_COMMIT_SHORT_SHA"
+  # Only package artifacts from the main branch.
   only:
     - main
 
-javadoc:
-  stage: documentation
-  script:
-    - mvn javadoc:javadoc
-  artifacts:
-    paths:
-      - target/site/apidocs/
-    expire_in: 30 days
-  allow_failure: true
+# --------------------------------------------------------------------------
+# RELEASE STAGE
+# --------------------------------------------------------------------------
 
+# Placeholder for the Docker image build and push to GitLab Container Registry.
+release:
+  stage: release
+  script:
+    - echo "Release stage placeholder - Docker image build will be implemented later."
+  when: manual
+  allow_failure: true
+  only:
+    - main
+
+# --------------------------------------------------------------------------
+# DOCS STAGE
+# --------------------------------------------------------------------------
+
+# Generate Javadoc and prepare it for publishing with GitLab Pages.
+pages:
+  stage: docs
+  script:
+    # Generate API documentation under 'target/site/apidocs'.
+    - mvn javadoc:javadoc
+    # GitLab Pages expects a 'public' directory as the site root.
+    - mv target/site/apidocs public
+  artifacts:
+    # Everything under 'public' will be served as a static site
+    # when GitLab Pages is enabled for the project.
+    paths:
+      - public
+    expire_in: 30 days
+  # Only publish documentation for the main branch.
+  only:
+    - main
