@@ -25,7 +25,6 @@
 
     <!--
       Human readable name and description of the project.
-      They may appear in generated documentation or tools.
     -->
     <name>Task Manager CLI</name>
     <description>Minimal Java CLI app</description>
@@ -49,35 +48,58 @@
     </dependencies>
 
     <build>
-        <plugins>
-            <!--
-              Maven Surefire Plugin
-              This plugin is responsible for running unit tests when we execute:
-                mvn test
-              or in more complex commands such as:
-                mvn verify
-                mvn package
+      <plugins>
 
-              The configuration below is minimal but explicit. Setting
-              useModulePath to false avoids issues with the Java module system.
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
-                <configuration>
-                    <useModulePath>false</useModulePath>
-                </configuration>
-            </plugin>
+        <!--
+          Maven Surefire Plugin
+          Responsible for running JUnit tests.
+          Executed in the CI pipeline using:
+            - mvn verify
+            - mvn test
+        -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.5.4</version>
+        </plugin>
 
-            <!--
-              In the future we will add here:
-                - Checkstyle plugin (static analysis)
-                - SpotBugs plugin (static analysis)
-                - Javadoc plugin (documentation generation)
-              so that the CI/CD pipeline can call them through Maven.
-            -->
-        </plugins>
+        <!--
+          Maven Checkstyle Plugin
+          Performs static style analysis on the source code.
+          Executed in the CI pipeline using:
+            - mvn checkstyle:check
+        -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <version>3.6.0</version>
+        </plugin>
+
+        <!--
+          SpotBugs Maven Plugin
+          Performs static bug analysis on the compiled bytecode.
+          Executed in the CI pipeline using:
+            - mvn spotbugs:check
+        -->
+        <plugin>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-maven-plugin</artifactId>
+            <version>4.9.8.0</version>
+        </plugin>
+
+        <!--
+          Maven Javadoc Plugin
+          Generates API documentation from source code.
+          Executed in the CI pipeline using:
+            - mvn javadoc:javadoc
+        -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.6.3</version>
+        </plugin>
+
+      </plugins>
     </build>
-
+    
 </project>
