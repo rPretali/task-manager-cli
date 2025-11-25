@@ -131,13 +131,15 @@ package:
 # to the GitLab Container Registry, as required by the assignment.
 release:
   stage: release
-  image: docker:stable
+  image: docker:27.3.1
   services:
-    - docker:dind
+    - docker:27.3.1-dind
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://docker:2375
   script:
+    - echo "Using Docker client:"
+    - docker version
     # Authenticate to the GitLab Container Registry.
     - docker login -u gitlab-ci-token -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
     # Build the Docker image using the Dockerfile in the repository root.
