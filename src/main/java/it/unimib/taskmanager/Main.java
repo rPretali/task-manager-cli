@@ -114,9 +114,6 @@ public class Main {
     /**
      * Handles the task sub-menu and related operations.
      *
-     * For now this method only contains the menu structure.
-     * We will implement the actions step by step.
-     *
      * @param app     application logic
      * @param scanner scanner for user input
      */
@@ -236,8 +233,7 @@ public class Main {
 
     private static void printTasks(List<Task> tasks) {
         if (tasks.isEmpty()) {
-            System.out.println("No tasks found.");
-            System.out.println();
+            System.out.println("No tasks found.\n");
 
             return;
         }
@@ -256,9 +252,8 @@ public class Main {
                 System.out.println("    description: " + description);
             }
 
-            System.out.println("    category: " + categoryName + " | done: " + task.isDone());
+            System.out.println("    category: " + categoryName + " | done: " + task.isDone() + "\n");
         }
-        System.out.println();
     }
 
     // ------------------------------------------------------------------------
@@ -324,8 +319,8 @@ public class Main {
     private static void createTask(Application app, Scanner scanner) {
         String title = readLine(scanner, "\nEnter task title: ");
         if (title.trim().isEmpty()) {
-            System.out.println("Invalid title. Task not created.");
-            System.out.println();
+            System.out.println("Invalid title. Task not created.\n");
+
             return;
         }
 
@@ -334,8 +329,8 @@ public class Main {
         // Check categories before asking for an id
         List<Category> categories = app.listCategories();
         if (categories.isEmpty()) {
-            System.out.println("No categories available. Create a category first.");
-            System.out.println();
+            System.out.println("No categories available. Create a category first.\n");
+
             return;
         }
 
@@ -344,11 +339,10 @@ public class Main {
 
         Task task = app.createTask(title, description, categoryId);
         if (task == null) {
-            System.out.println("Could not create task. Invalid category or invalid title.");
+            System.out.println("Could not create task. Invalid category or invalid title.\n");
         } else {
-            System.out.println("Task created with id " + task.getId());
+            System.out.println("Task created with id " + task.getId() + "\n");
         }
-        System.out.println();
     }
 
     private static void searchTasksByTitle(Application app, Scanner scanner) {
@@ -361,8 +355,8 @@ public class Main {
         List<Category> categories = app.listCategories();
 
         if (categories.isEmpty()) {
-            System.out.println("No categories available. Create a category first.");
-            System.out.println();
+            System.out.println("No categories available. Create a category first.\n");
+
             return;
         }
 
@@ -386,8 +380,7 @@ public class Main {
         } else if (choice == 2) {
             done = false;
         } else {
-            System.out.println("Invalid choice. Returning to task menu.");
-            System.out.println();
+            System.out.println("Invalid choice. Returning to task menu.\n");
 
             return;
         }
@@ -407,7 +400,7 @@ public class Main {
             System.out.println("3. Change category");
             System.out.println("0. Back");
 
-            int choice = readInt(scanner, "Choose an option: ");
+            int choice = readInt(scanner, "\nChoose an option: ");
 
             switch (choice) {
                 case 1:
@@ -435,12 +428,10 @@ public class Main {
         boolean result = app.markTaskDone(taskId);
 
         if (result) {
-            System.out.println("Task marked as done.");
+            System.out.println("Task marked as done.\n");
         } else {
-            System.out.println("Task not found.");
+            System.out.println("Task not found.\n");
         }
-
-        System.out.println();
     }
 
     private static void markTaskPending(Application app, Scanner scanner) {
@@ -450,12 +441,10 @@ public class Main {
         boolean result = app.markTaskPending(taskId);
 
         if (result) {
-            System.out.println("Task marked as pending.");
+            System.out.println("Task marked as pending.\n");
         } else {
-            System.out.println("Task not found.");
+            System.out.println("Task not found.\n");
         }
-
-        System.out.println();
     }
 
     private static void deleteTask(Application app, Scanner scanner) {
@@ -465,12 +454,10 @@ public class Main {
         boolean result = app.deleteTask(taskId);
 
         if (result) {
-            System.out.println("Task deleted.");
+            System.out.println("Task deleted.\n");
         } else {
-            System.out.println("Task not found.");
+            System.out.println("Task not found.\n");
         }
-
-        System.out.println();
     }
 
     private static void changeTaskTitle(Application app, Scanner scanner) {
@@ -488,12 +475,10 @@ public class Main {
         boolean result = app.updateTaskTitle(id, newTitle);
 
         if (result) {
-            System.out.println("Title updated.");
+            System.out.println("Title updated.\n");
         } else {
-            System.out.println("Task not found.");
+            System.out.println("Task not found.\n");
         }
-
-        System.out.println();
     }
 
     private static void changeTaskDescription(Application app, Scanner scanner) {
@@ -504,38 +489,33 @@ public class Main {
         boolean result = app.updateTaskDescription(id, newDesc);
 
         if (result) {
-            System.out.println("Description updated.");
+            System.out.println("Description updated.\n");
         } else {
-            System.out.println("Task not found.");
+            System.out.println("Task not found.\n");
         }
-
-        System.out.println();
     }
 
     private static void changeTaskCategory(Application app, Scanner scanner) {
-    listTasks(app);
-    int taskId = readInt(scanner, "\nEnter task id to modify category: ");
+        listTasks(app);
+        int taskId = readInt(scanner, "\nEnter task id to modify category: ");
 
-    List<Category> categories = app.listCategories();
+        List<Category> categories = app.listCategories();
 
-    if (categories.isEmpty()) {
-        System.out.println("No categories available. Create a category first.");
-        System.out.println();
+        if (categories.isEmpty()) {
+            System.out.println("No categories available. Create a category first.\n");
 
-        return;
-    }
+            return;
+        }
 
-    printCategories(categories);
+        printCategories(categories);
         int categoryId = readInt(scanner, "\nEnter new category id: ");
 
         boolean result = app.updateTaskCategory(taskId, categoryId);
 
         if (result) {
-            System.out.println("Category updated.");
+            System.out.println("Task category updated successfully.\n");
         } else {
-            System.out.println("Task or category not found.");
+            System.out.println("Task or category not found.\n");
         }
-
-        System.out.println();
     }
 }

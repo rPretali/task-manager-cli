@@ -137,6 +137,7 @@ release:
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
   script:
     - echo "Using Docker client:"
     - docker version

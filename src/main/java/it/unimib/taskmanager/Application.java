@@ -102,14 +102,19 @@ public class Application {
      * @return true if the category was found and renamed, false otherwise
      */
     public boolean renameCategory(int categoryId, String newName) {
-        Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
-
-        if (categoryOpt.isEmpty()) {
+        if (newName == null || newName.trim().isEmpty()) {
             return false;
         }
 
-        Category category = categoryOpt.get();
-        category.setName(newName);
+        Category category = categoryRepository.findById(categoryId).isPresent()
+                ? categoryRepository.findById(categoryId).get()
+                : null;
+
+        if (category == null) {
+            return false;
+        }
+
+        category.setName(newName.trim());
 
         return true;
     }
@@ -241,14 +246,19 @@ public class Application {
      * @return true if the task was found and updated, false otherwise
      */
     public boolean updateTaskTitle(int taskId, String newTitle) {
-        Optional<Task> taskOpt = taskRepository.findById(taskId);
-
-        if (taskOpt.isEmpty()) {
+        if (newTitle == null || newTitle.trim().isEmpty()) {
             return false;
         }
 
-        Task task = taskOpt.get();
-        task.setTitle(newTitle);
+        Task task = taskRepository.findById(taskId).isPresent()
+                ? taskRepository.findById(taskId).get()
+                : null;
+
+        if (task == null) {
+            return false;
+        }
+
+        task.setTitle(newTitle.trim());
 
         return true;
     }
