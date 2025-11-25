@@ -25,7 +25,6 @@ cache:
 # Default step executed before each job that does not override before_script.
 before_script:
   - echo "Using Maven with Temurin JDK 17"
-  - mvn -version
 
 # -----------------------------------------------------------------------------
 # BUILD STAGE
