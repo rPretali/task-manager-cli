@@ -15,6 +15,8 @@ variables:
   # Use a local Maven repository inside the job workspace
   # to avoid downloading dependencies from scratch on each job.
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  # Name of the Docker image built in the release stage.
+  CONTAINER_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
 
 cache:
   paths:
@@ -25,9 +27,9 @@ before_script:
   - echo "Using Maven with Temurin JDK 17"
   - mvn -version
 
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # BUILD STAGE
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 # Compile the project and resolve all Maven dependencies.
 build:
@@ -40,10 +42,10 @@ build:
       - target/
     expire_in: 1 day
 
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # VERIFY STAGE
 # Static and dynamic analysis jobs run in parallel.
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 # Static analysis - code style and formatting (Checkstyle).
 checkstyle:
@@ -84,9 +86,9 @@ verify-tests:
       - target/surefire-reports/
     expire_in: 30 days
 
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # TEST STAGE
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 # Dedicated test stage, as requested by the assignment table:
 # run 'mvn test' and expose JUnit XML reports.
@@ -101,9 +103,9 @@ test:
       - target/surefire-reports/
     expire_in: 30 days
 
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # PACKAGE STAGE
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 # Build the executable JAR that can be distributed or used by the release stage.
 package:
@@ -122,23 +124,36 @@ package:
   only:
     - main
 
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # RELEASE STAGE
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-# Placeholder for the Docker image build and push to GitLab Container Registry.
+# Build a Docker image with the packaged application and push it
+# to the GitLab Container Registry, as required by the assignment.
 release:
   stage: release
+  image: docker:stable
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://docker:2375
   script:
-    - echo "Release stage placeholder - Docker image build will be implemented later."
-  when: manual
-  allow_failure: true
+    # Authenticate to the GitLab Container Registry.
+    - docker login -u gitlab-ci-token -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
+    # Build the Docker image using the Dockerfile in the repository root.
+    - docker build -t "$CONTAINER_IMAGE" .
+    # Push the image so that it can be used by the deploy stage or other environments.
+    - docker push "$CONTAINER_IMAGE"
+  # Download the JAR produced in the package stage.
+  dependencies:
+    - package
   only:
     - main
 
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # DOCS STAGE
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 # Generate Javadoc and prepare it for publishing with GitLab Pages.
 pages:
