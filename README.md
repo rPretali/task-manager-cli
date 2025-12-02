@@ -122,8 +122,9 @@ Compiles the codebase and resolves project dependencies.
 ## Test
 
 **Command:** `mvn test`
-A dedicated stage that re-executes the entire test suite to ensure consistent results.
-Produces full JUnit reports visible in GitLab’s Test Reports interface.
+This stage focuses only on executing the entire JUnit 5 test suite in a clean environment.
+It validates the application’s core behavior after static analysis, produces detailed XML reports, and ensures consistent results.
+Full JUnit reports visible in the GitLab’s Test Reports interface.
 
 ---
 
