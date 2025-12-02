@@ -73,6 +73,10 @@ The pipeline ensures:
 * Docker image creation and distribution
 * automatically published documentation
 
+The pipeline stages are deliberately ordered to balance speed and thoroughness.
+Static analysis runs in parallel during the Verify phase to provide rapid feedback on style and potential bugs without blocking the build.
+The dedicated Test stage then re-executes the full test suite in a clean environment, ensuring regressions are caught before the artifact moves downstream to packaging and release.
+This two-phase approach catches issues at different levels: style and obvious defects early, and subtle behavioral regressions later.
 ---
 
 # CI/CD Stages
@@ -216,6 +220,8 @@ Generates and publishes HTML API documentation.
 ---
 
 # Running the Application Locally
+To develop and test locally, follow these steps in order.
+Each command builds on the previous stage and mirrors the CI/CD pipeline structure, allowing you to validate the same build and test procedures that run automatically on every commit.
 
 ### Build
 
