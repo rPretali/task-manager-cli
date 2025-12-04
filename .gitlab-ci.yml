@@ -76,15 +76,15 @@ spotbugs:
 # with the static analysis jobs.
 memory-analysis:
   stage: verify
+  dependencies:
+    - build
   script:
-    - mvn test
-    - ls -la target/heapdump*.hprof || echo "No heap dump generated (normal if no OOM)"
+    - ls -la target/heapdump*.hprof || echo "No heap dump generated"
   artifacts:
     paths:
       - target/heapdump*.hprof
     expire_in: 30 days
   allow_failure: true
-
 
 # -----------------------------------------------------------------------------
 # TEST STAGE
