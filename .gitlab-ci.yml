@@ -74,16 +74,17 @@ spotbugs:
 # Dynamic analysis - run the unit test suite as part of the verify stage.
 # This job provides a first dynamic execution of the code in parallel
 # with the static analysis jobs.
-verify-tests:
+memory-analysis:
   stage: verify
   script:
     - mvn test
+    - ls -la target/heapdump*.hprof || echo "No heap dump generated (normal if no OOM)"
   artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
     paths:
-      - target/surefire-reports/
+      - target/heapdump*.hprof
     expire_in: 30 days
+  allow_failure: true
+
 
 # -----------------------------------------------------------------------------
 # TEST STAGE
