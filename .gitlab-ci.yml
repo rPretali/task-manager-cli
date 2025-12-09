@@ -19,6 +19,9 @@ variables:
   CONTAINER_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
 
 cache:
+  key:
+    files:
+      - pom.xml
   paths:
     - .m2/repository/
 
