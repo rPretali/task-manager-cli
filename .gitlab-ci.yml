@@ -77,15 +77,18 @@ spotbugs:
 # Dynamic analysis - run the unit test suite as part of the verify stage.
 # This job provides a first dynamic execution of the code in parallel
 # with the static analysis jobs.
-memory-analysis:
+dynamic-analysis:
   stage: verify
   dependencies:
     - build
   script:
-    - ls -la target/heapdump*.hprof || echo "No heap dump generated"
+    # Executes test to record the test coverage
+    - mvn test jacoco:report
+    # Prints the results of the coverage
+    - cat target/site/jacoco/index.html | grep -o 'Total[^%]*%' || echo "Coverage info not found"
   artifacts:
     paths:
-      - target/heapdump*.hprof
+      - target/site/jacoco/
     expire_in: 30 days
   allow_failure: true
 
