@@ -1,12 +1,23 @@
 # Build directory
 target/
 
+# Maven
+.m2/
+
 # VS Code settings
 .vscode/
 
 # IntelliJ IDEA
 .idea/
 *.iml
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# NetBeans
+nbproject/
 
 # Logs
 *.log
@@ -17,3 +28,6 @@ Thumbs.db
 
 # Temporary files
 *.tmp
+
+# Compiled class files
+*.class
