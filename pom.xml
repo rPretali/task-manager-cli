@@ -62,7 +62,7 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <version>3.5.4</version>
             <configuration>
-              <argLine>-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=target/heapdump.hprof</argLine>
+              <argLine>@{argLine} -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=target/heapdump.hprof</argLine>
             </configuration>
         </plugin>
 
