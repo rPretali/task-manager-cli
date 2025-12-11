@@ -90,7 +90,6 @@ dynamic-analysis:
     paths:
       - target/site/jacoco/
     expire_in: 30 days
-  allow_failure: true
 
 # -----------------------------------------------------------------------------
 # TEST STAGE
