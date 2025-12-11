@@ -93,14 +93,31 @@ dynamic-analysis:
 
 # -----------------------------------------------------------------------------
 # TEST STAGE
+# Unit tests run first, then integration tests if unit tests pass (fail-fast).
 # -----------------------------------------------------------------------------
 
-# Dedicated test stage, as requested by the assignment table:
-# run 'mvn test' and expose JUnit XML reports.
-test:
+# Unit tests - test individual components in isolation.
+# Excludes integration tests (classes ending with IntegrationTest).
+unit-tests:
   stage: test
   script:
-    - mvn test
+    - mvn test -Dtest='!*IntegrationTest'
+  artifacts:
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+    paths:
+      - target/surefire-reports/
+    expire_in: 30 days
+
+# Integration tests - test the interaction between components.
+# Runs only classes ending with IntegrationTest.
+# Executes only if unit tests pass (fail-fast approach).
+integration-tests:
+  stage: test
+  needs:
+    - unit-tests
+  script:
+    - mvn test -Dtest='*IntegrationTest'
   artifacts:
     reports:
       junit: target/surefire-reports/TEST-*.xml
