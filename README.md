@@ -21,6 +21,7 @@ The application supports basic task management through a simple text-based inter
 Users can do:
 
 **Task Management:**
+
 * **Create tasks** with customizable titles, descriptions and category assignments
 * **List all tasks** with filtering options to view tasks by status (done/pending) or category
 * **Update task details** including titles, descriptions and category associations
@@ -29,6 +30,7 @@ Users can do:
 * **Status tracking** to distinguish between active and completed work items
 
 **Category Management:**
+
 * **Create categories** to organize and group related tasks
 * **List all categories** with counts of associated tasks
 * **Update category names** and properties
@@ -87,17 +89,16 @@ The pipeline stages are deliberately structured to balance speed, thoroughness a
 # CI/CD Pipeline Overview
 
 A complete CI/CD pipeline is implemented using GitLab CI/CD, covering the entire lifecycle:
-```
-Commit
- - Build
- - Verify (parallel: Checkstyle, SpotBugs, Code Coverage)
- - Test (Unit and Integration)
- - Package
- - Release
- - Docs (GitLab Pages)
-```
+
+- **Build** – Compile code and resolve dependencies
+- **Verify** – Static and dynamic analysis in parallel (Checkstyle, SpotBugs, Code Coverage)
+- **Test** – Unit and integration tests
+- **Package** – Generate executable JAR
+- **Release** – Build and push Docker image
+- **Docs** – Generate and publish documentation via GitLab Pages
 
 The pipeline ensures:
+
 * Consistent and reproducible builds
 * Early quality feedback via static and dynamic analysis
 * Automated packaging and versioned artifacts
@@ -302,5 +303,3 @@ mvn javadoc:javadoc
 ```
 
 Generates API documentation. Open `target/site/apidocs/index.html` in a browser to view it.
-
----
