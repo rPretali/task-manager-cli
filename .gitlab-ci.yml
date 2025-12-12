@@ -1,5 +1,5 @@
 # CI/CD pipeline for the Task Manager CLI Java project.
-# Stages follow the assignment: build -> verify -> test -> package -> release -> docs.
+# Stages: build -> verify -> test -> package -> release -> docs.
 
 image: maven:3.9.6-eclipse-temurin-17
 
@@ -18,13 +18,6 @@ variables:
   # Name of the Docker image built in the release stage.
   CONTAINER_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
 
-cache:
-  key:
-    files:
-      - pom.xml
-  paths:
-    - .m2/repository/
-
 # Default step executed before each job that does not override before_script.
 before_script:
   - echo "Using Maven with Temurin JDK 17"
@@ -36,6 +29,13 @@ before_script:
 # Compile the project and resolve all Maven dependencies.
 build:
   stage: build
+  cache:
+    key:
+      files:
+        - pom.xml
+    paths:
+      - .m2/repository/
+    policy: pull-push
   script:
     - mvn clean compile
   artifacts:
@@ -52,6 +52,13 @@ build:
 # Static analysis - code style and formatting (Checkstyle).
 checkstyle:
   stage: verify
+  cache:
+    key:
+      files:
+        - pom.xml
+    paths:
+      - .m2/repository/
+    policy: pull
   script:
     - mvn checkstyle:check
   # Do not block the pipeline because of style violations,
@@ -65,6 +72,13 @@ checkstyle:
 # Static analysis - potential bugs and bad patterns (SpotBugs).
 spotbugs:
   stage: verify
+  cache:
+    key:
+      files:
+        - pom.xml
+    paths:
+      - .m2/repository/
+    policy: pull
   script:
     - mvn spotbugs:check
   # Treat findings as quality feedback, not as hard blockers.
@@ -79,6 +93,13 @@ spotbugs:
 # with the static analysis jobs.
 dynamic-analysis:
   stage: verify
+  cache:
+    key:
+      files:
+        - pom.xml
+    paths:
+      - .m2/repository/
+    policy: pull
   dependencies:
     - build
   script:
@@ -100,6 +121,13 @@ dynamic-analysis:
 # Excludes integration tests (classes ending with IntegrationTest).
 unit-tests:
   stage: test
+  cache:
+    key:
+      files:
+        - pom.xml
+    paths:
+      - .m2/repository/
+    policy: pull
   script:
     - mvn test -Dtest='!*IntegrationTest'
   artifacts:
@@ -114,6 +142,13 @@ unit-tests:
 # Executes only if unit tests pass (fail-fast approach).
 integration-tests:
   stage: test
+  cache:
+    key:
+      files:
+        - pom.xml
+    paths:
+      - .m2/repository/
+    policy: pull
   needs:
     - unit-tests
   script:
@@ -132,6 +167,13 @@ integration-tests:
 # Build the executable JAR that can be distributed or used by the release stage.
 package:
   stage: package
+  cache:
+    key:
+      files:
+        - pom.xml
+    paths:
+      - .m2/repository/
+    policy: pull
   script:
     # Tests already run in verify and test stages, so we can skip them here.
     - mvn package -DskipTests
@@ -151,11 +193,12 @@ package:
 # -----------------------------------------------------------------------------
 
 # Build a Docker image with the packaged application and push it
-# to the GitLab Container Registry, as required by the assignment.
+# to the GitLab Container Registry.
 
 release:
   stage: release
   image: docker:27.3.1
+  cache: {}
   services:
     - docker:27.3.1-dind
   variables:
@@ -185,6 +228,13 @@ release:
 
 pages:
   stage: docs
+  cache:
+    key:
+      files:
+        - pom.xml
+    paths:
+      - .m2/repository/
+    policy: pull
   script:
     # Generate API documentation under 'target/site/apidocs'.
     - mvn javadoc:javadoc
