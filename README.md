@@ -3,14 +3,10 @@
 Task Manager CLI is a minimal Java 17 command-line application that provides CRUD operations for **Tasks** and **Categories**.
 The project is intentionally lightweight, with a clear separation between domain, application logic and CLI interface, allowing the focus to be placed on a fully automated and well-structured CI/CD pipeline.
 
----
-
 ## Team Members
 
 * **Ethan Gabriel Leskovec** – 886040 – [e.leskovec@campus.unimib.it](mailto:e.leskovec@campus.unimib.it)
 * **Riccardo Pretali** – 870452 – [r.pretali@campus.unimib.it](mailto:r.pretali@campus.unimib.it)
-
----
 
 ## Repository Links
 
@@ -25,9 +21,9 @@ The application supports basic task management through a simple text-based inter
 Users can do:
 
 **Task Management:**
-* **Create tasks** with customizable titles, descriptions, and category assignments
+* **Create tasks** with customizable titles, descriptions and category assignments
 * **List all tasks** with filtering options to view tasks by status (done/pending) or category
-* **Update task details** including titles, descriptions, and category associations
+* **Update task details** including titles, descriptions and category associations
 * **Mark tasks** as complete or revert them to pending status
 * **Delete tasks** individually when no longer needed
 * **Status tracking** to distinguish between active and completed work items
@@ -51,270 +47,260 @@ A full JUnit 5 test suite verifies the core application logic, while static anal
 
 ---
 
+# Architectural and Technological Choices
+
+## Technology Stack
+
+### Java 17
+Java 17 is a Long-Term Support (LTS) release providing stability and compatibility with the Maven ecosystem and CI/CD tools. Its maturity ensures reliable compilation and testing within automated pipelines.
+
+### Maven 3.9.6
+Maven is the de-facto standard build tool for Java projects, chosen for its:
+- Standardized build lifecycle that maps cleanly to CI/CD stages
+- Extensive plugin ecosystem (Checkstyle, SpotBugs, JaCoCo, Javadoc)
+- Dependency caching capabilities that optimize pipeline execution times
+- Native integration with GitLab CI/CD runners
+
+### GitLab CI/CD
+GitLab provides an integrated DevOps platform that covers the entire pipeline lifecycle:
+- Native CI/CD with YAML-based configuration
+- Built-in Container Registry for Docker image storage
+- GitLab Pages for automatic documentation publishing
+- Caching mechanisms for dependency optimization
+- Test Reports integration for visual test result display
+- Artifact management with configurable retention policies
+
+## Pipeline Design Philosophy
+
+The pipeline stages are deliberately structured to balance speed, thoroughness and resource efficiency:
+
+1. **Parallel execution in Verify stage**: Static analysis (Checkstyle, SpotBugs) and dynamic analysis (JaCoCo) run simultaneously to provide rapid feedback on different quality aspects without blocking each other.
+
+2. **Sequential execution in Test stage**: Unit tests run before integration tests (fail-fast approach) to catch fundamental issues quickly before executing more complex and time-consuming integration tests.
+
+3. **Selective execution**: Package, Release and Docs stages run only on the `main` branch to avoid unnecessary artifact generation and storage consumption for feature branches.
+
+4. **Cache optimization**: Maven dependencies are cached with the Build stage as the sole writer, while downstream stages use read-only access to ensure consistency and reduce build times.
+
+---
+
 # CI/CD Pipeline Overview
 
 A complete CI/CD pipeline is implemented using GitLab CI/CD, covering the entire lifecycle:
-
 ```
 Commit
- → Build
- → Verify (parallel: Checkstyle, SpotBugs, Dynamic Analysis)
- → Test (Unit → Integration)
- → Package
- → Release
- → Docs (GitLab Pages)
+ - Build
+ - Verify (parallel: Checkstyle, SpotBugs, Code Coverage)
+ - Test (Unit and Integration)
+ - Package
+ - Release
+ - Docs (GitLab Pages)
 ```
 
 The pipeline ensures:
-
-* consistent and reproducible builds
-* early quality feedback via static and dynamic analysis
-* automated packaging and versioned artifacts
+* Consistent and reproducible builds
+* Early quality feedback via static and dynamic analysis
+* Automated packaging and versioned artifacts
 * Docker image creation and distribution
-* automatically published documentation
+* Automatically published documentation
 
-The pipeline stages are deliberately ordered to balance speed and thoroughness.
-Static analysis runs in parallel during the Verify phase to provide rapid feedback on style and potential bugs without blocking the build.
-The dedicated Test stage then re-executes the full test suite in a clean environment, ensuring regressions are caught before the artifact moves downstream to packaging and release.
-This two-phase approach catches issues at different levels: style and obvious defects early, and subtle behavioral regressions later.
 ---
 
 # CI/CD Stages
 
+**Pipeline Optimization:** The pipeline uses GitLab's caching mechanism to store Maven dependencies between runs. The cache key is based on `pom.xml`, ensuring dependencies are re-downloaded only when they change. The Build stage has write access to update the cache, while subsequent stages use read-only access for consistency.
+
 ## Build
 
 **Command:** `mvn clean compile`
+
 Compiles the codebase and resolves project dependencies.
 
-**Details:**
+The Build stage ensures that the code compiles successfully and all Maven dependencies are downloaded from central repositories. The `clean` goal removes artifacts from previous builds to guarantee a fresh compilation.
 
-* Maven 3.9.6 + Eclipse Temurin JDK 17
-* Cleans and compiles
-* Uses a cached local Maven repository
-* Artifacts retained for 1 day
+**Cache Strategy:**
+This stage implements a `pull-push` cache policy on the `.m2/repository/` directory, keyed to the `pom.xml` file. This means the cache is updated only when dependencies change, avoiding redundant downloads. The Build stage is the only one with write permissions to prevent cache inconsistencies across parallel jobs.
 
----
+**Artifacts:**
+Compiled classes are retained in `target/` for 1 day, as they serve only as intermediate artifacts for downstream stages within the same pipeline execution.
 
-## Verify (parallel static & dynamic analysis)
+
+## Verify
+
+The Verify stage runs three jobs in parallel to provide rapid feedback on code quality from different perspectives: static style analysis, static bug detection and dynamic code coverage measurement.
 
 ### Checkstyle
 
 **Command:** `mvn checkstyle:check`
 
-* Style validation
-* `allow_failure: true`
-* Artifact: `target/checkstyle-result.xml`
+Performs static style validation against Java coding standards. Checkstyle enforces consistent formatting, naming conventions and code structure.
+
+This stage uses read-only cache access (`pull` policy) to retrieve dependencies downloaded by the Build stage.
+
+**allow_failure: true** – Since the focus of this assignment is on the pipeline rather than on refactoring the application code, Checkstyle violations are treated as warnings rather than blockers. The report remains available for inspection in `target/checkstyle-result.xml` (retained for 7 days), allowing quality monitoring without halting the pipeline.
 
 ### SpotBugs
 
 **Command:** `mvn spotbugs:check`
 
-* Bytecode bug detection
-* `allow_failure: true`
-* Artifact: `target/spotbugsXml.xml`
+Performs static analysis on compiled bytecode to detect potential bugs, code smells and suspicious patterns. SpotBugs identifies issues like null pointer dereferences, resource leaks and concurrency problems.
 
-### Dynamic Analysis (Code Coverage)
+This stage uses read-only cache access (`pull` policy) to retrieve dependencies downloaded by the Build stage.
+
+**allow_failure: true** – Similar to Checkstyle, SpotBugs findings are treated as quality feedback rather than hard failures. This allows the pipeline to complete while still generating the analysis report in `target/spotbugsXml.xml` (retained for 7 days).
+
+### Code Coverage
 
 **Command:** `mvn test jacoco:report`
 
-* **Tool:** JaCoCo
-* Executes the test suite to measure code coverage
-* Prints coverage percentage to the console for GitLab parsing
-* Artifact: `target/site/jacoco/` (HTML and CSV reports)
-* Runs in parallel with Checkstyle and SpotBugs
+Executes the test suite with JaCoCo to measure code coverage. This job satisfies the dynamic analysis requirement by actually running the code and collecting runtime metrics.
 
----
+This stage uses read-only cache access (`pull` policy) to retrieve dependencies downloaded by the Build stage.
+
+JaCoCo generates both HTML reports and CSV data showing line and branch coverage percentages. The coverage summary is printed to the console for immediate visibility in the pipeline logs, while detailed reports are stored in `target/site/jacoco/` (retained for 30 days).
+
+**Retention:** Coverage reports are retained for 30 days, aligned with test reports retention, since coverage metrics are intrinsically tied to test execution and are useful for tracking coverage trends over time.
+
+Running tests at this stage, in parallel with static analysis, provides early feedback on test coverage alongside style and bug reports. The tests will be executed again in the dedicated Test stage to ensure consistent validation in a clean environment.
+
 
 ## Test
-This stage executes the full test suite, split into two sequential jobs to ensure rapid feedback and resource efficiency.
-It validates the application’s core behavior after static analysis, produces detailed XML reports, and ensures consistent results.
-Full JUnit reports visible in the GitLab’s Test Reports interface.
+
+This stage executes the full test suite, split into two sequential jobs to ensure rapid feedback and resource efficiency. It validates the application's core behavior after static analysis, produces detailed XML reports and ensures consistent results in a clean execution environment.
 
 ### Unit Tests
+
 **Command:** `mvn test -Dtest='!*IntegrationTest'`
-* Executes isolated unit tests only
-* Excludes any class ending in `IntegrationTest`
-* **Fail-fast:** If unit tests fail, the pipeline stops immediately
+
+Executes isolated unit tests only, excluding any class ending in `IntegrationTest`. Unit tests verify individual components (services, repositories, domain logic) in isolation without external dependencies.
+
+This stage uses read-only cache access (`pull` policy) to retrieve dependencies downloaded by the Build stage.
+
+**Fail-fast approach:** If unit tests fail, the pipeline stops immediately. This prevents wasting computational resources on integration tests when fundamental issues exist in the codebase. Unit tests are typically faster and more numerous, making them ideal for catching basic logic errors early.
+
+**Artifacts:** JUnit XML reports are generated in `target/surefire-reports/` and automatically integrated into GitLab's Test Reports interface (accessible via Pipeline > Tests), providing a visual summary of test results directly in the pipeline view. Reports are retained for 30 days to allow retrospective analysis of test trends and regressions.
 
 ### Integration Tests
+
 **Command:** `mvn test -Dtest='*IntegrationTest'`
-* Executes only classes ending in `IntegrationTest`
-* **Dependency:** Runs only if `unit-tests` passes successfully
 
+Executes only classes ending with `IntegrationTest`, which verify the interaction between application components (e.g., service layer with repository layer).
 
----
+This stage uses read-only cache access (`pull` policy) to retrieve dependencies downloaded by the Build stage.
+
+**Sequential execution:** This job runs only if unit tests pass successfully. Integration tests are more complex and time-consuming than unit tests, so executing them only after confirming basic functionality saves pipeline execution time and resources.
+
+**Dependency on unit-tests job:** The explicit `needs: [unit-tests]` dependency enforces the fail-fast strategy, ensuring integration tests never run when foundational unit tests are failing.
+
 
 ## Package
 
 **Command:** `mvn package -DskipTests`
-Builds an executable JAR.
 
-**Details:**
+Builds an executable JAR file containing the compiled application ready for distribution.
 
-* Tests skipped because they were already executed
-* Output: `task-manager-cli-*.jar`
-* Artifact named with commit SHA for traceability
-* Executed only on branch `main`
-* Retained for 90 days
+This stage uses read-only cache access (`pull` policy) to retrieve dependencies downloaded by the Build stage.
 
----
+Tests are skipped at this stage because they have already been executed and validated in both the Verify and Test stages. Re-running tests would be redundant and would unnecessarily increase pipeline execution time.
+
+**Branch restriction:** This stage runs only on the `main` branch. Feature branches and development work do not require packaged artifacts, so limiting execution to `main` reduces unnecessary artifact generation and storage consumption.
+
+**Artifact naming:** The JAR file is named with the commit SHA (`task-manager-cli-$CI_COMMIT_SHORT_SHA`) to ensure traceability between deployed artifacts and their source code version. This naming convention enables quick identification of which commit produced a specific artifact.
+
+**Retention:** The JAR artifact is retained for 90 days, providing a reasonable window for rollback scenarios or for retrieving previous versions if issues are discovered in production. This extended retention balances accessibility with storage costs.
+
 
 ## Release
 
-Builds and publishes a Docker image using Docker-in-Docker.
+Builds and publishes a Docker image containing the packaged application to the GitLab Container Registry.
 
-**Details:**
+**Docker-in-Docker:** The release stage uses `docker:27.3.1` as the base image with `docker:27.3.1-dind` (Docker-in-Docker) as a service. This configuration allows building Docker images within the GitLab CI pipeline environment.
 
-* Image: `docker:27.3.1`
-* Service: `docker:27.3.1-dind`
-* Commands:
+**Image tagging:** Each Docker image is tagged with the commit SHA (`$CI_COMMIT_SHORT_SHA`), ensuring that every version of the application can be uniquely identified and traced back to its source commit. This tagging strategy supports versioning and enables precise rollback to any previous image if needed.
 
-  * `docker build -t $CONTAINER_IMAGE .`
-  * `docker push $CONTAINER_IMAGE`
-* Uses:
+**Container Registry:** The image is pushed to GitLab's integrated Container Registry, which provides authenticated access and seamless integration with GitLab's authentication system. The registry URL and credentials are automatically provided by GitLab CI through environment variables (`$CI_REGISTRY`, `$CI_JOB_TOKEN`).
 
-  * `DOCKER_DRIVER=overlay2`
-  * `DOCKER_HOST=tcp://docker:2375`
-  * `DOCKER_TLS_CERTDIR=""`
-* Executed only on `main`
+**Dependency on Package stage:** The release job explicitly depends on the `package` stage to retrieve the JAR file produced earlier. This JAR is copied into the Docker image during the build process, as specified in the `Dockerfile`.
 
----
+**Branch restriction:** Like the Package stage, Release runs only on `main` to avoid creating unnecessary Docker images for every feature branch or development commit.
+
 
 ## Docs
 
 **Command:** `mvn javadoc:javadoc`
-Generates and publishes HTML API documentation.
 
-**Details:**
+Generates HTML API documentation from source code comments and publishes it automatically via GitLab Pages.
 
-* Output is moved to the `public/` directory 
-* GitLab Pages publishes automatically
-* Executed only on `main`
-* Artifacts retained for 30 days
+This stage uses read-only cache access (`pull` policy) to retrieve dependencies downloaded by the Build stage.
+
+**Javadoc generation:** Maven's Javadoc plugin extracts documentation from Java source files, creating a navigable HTML website that documents all public classes, methods and interfaces. This provides developers with a reference guide for the application's API.
+
+**GitLab Pages integration:** The generated documentation is moved from `target/site/apidocs` to the `public/` directory, which is the standard location GitLab Pages expects for static site content. GitLab automatically publishes everything in `public/` as a static website accessible via a public URL.
+
+**Automatic updates:** Every time the pipeline runs on `main`, the documentation is regenerated and republished, ensuring the published API documentation always reflects the current state of the codebase.
+
+**Branch restriction:** Documentation is published only from `main` to ensure that the publicly accessible documentation represents the stable, released version of the application rather than work-in-progress code from feature branches.
+
+**Retention:** Documentation artifacts are retained for 30 days, providing historical access while balancing storage requirements.
+
+---
+
+**Note on test report visibility:** Test reports from both unit and integration tests are automatically aggregated and displayed in GitLab's Test Reports interface (Pipeline > Tests tab), providing a unified view of all test results without needing to download XML files.
 
 ---
 
-# Artifacts and Reports
-
-### Compiled Classes
-* Location: `target/classes/`
-* Content: Compiled Java bytecode for the entire project. Compiled by Maven.
-* Generated by: `mvn clean compile`
-
-### Unit & Integration Tests
-* GitLab → Pipeline → Test Reports
-* Files: `target/surefire-reports/TEST-*.xml` (aggregated from both jobs)
-* Execution Framework: JUnit 5 (Jupiter)
-* Retention: 30 days
-
-### Dynamic Analysis (Coverage)
-* **JaCoCo Report**
-* Location: `target/site/jacoco/`
-* Content: HTML website and CSV data detailing line and branch coverage
-* Retention: 30 days
-
-### Static Analysis
-
-**Checkstyle Report**
-* Location: `target/checkstyle-result.xml`
-* Analysis: Code style validation using Google Java Style Guide conventions
-
-**SpotBugs Report**
-* Location: `target/spotbugsXml.xml`
-* Analysis: Bytecode-level defect detection identifying potential bugs and code quality issues
-
-### Build Artifact
-
-* Executable JAR Archive
-* Location: `target/task-manager-cli-*.jar`
-* Retention: 90 days
-
-### Documentation
-
-* Generated by: `mvn javadoc:javadoc`
-* Published through GitLab Pages from the `public/` directory.
-* Retention: 30 days
----
-# Caching Strategy
-
-To optimize pipeline execution time and reduce network usage, the pipeline implements a robust caching strategy for Maven dependencies.
-
-* **Mechanism:** The pipeline uses GitLab CI's caching feature to store downloaded dependencies between jobs and pipeline runs.
-* **Cache Key:** The cache key is generated based on the hash of the `pom.xml` file. This ensures that the cache is reused as long as the project dependencies remain unchanged. If `pom.xml` is modified, a new cache is created.
-* **Local Repository:** The `MAVEN_OPTS` variable is configured to store dependencies in a local `.m2/repository` directory within the project workspace, which is the specific path designated for caching.
-* **Cache Policy:**
-    * **Build Stage:** The `build` job has write access to the cache. It downloads dependencies and updates the cache if new libraries are added.
-    * **Subsequent Stages:** Downstream stages (Verify, Test, Package, etc.) use a `pull` policy (read-only). They retrieve the pre-downloaded dependencies from the cache, ensuring consistency and significantly speeding up execution by avoiding redundant downloads.
-
----
 # Running the Application Locally
-To develop and test locally, follow these steps in order.
-Each command builds on the previous stage and mirrors the CI/CD pipeline structure, allowing you to validate the same build and test procedures that run automatically on every commit.
+
+To develop and test locally, execute the following commands in order. Each step mirrors a corresponding pipeline stage, allowing you to validate the same build and test procedures that run automatically in CI/CD.
 
 ### Build
-
-```
+```bash
 mvn clean compile
 ```
 
-### Run Tests
+Compiles the source code and downloads dependencies.
 
-```
+### Run Tests
+```bash
 mvn test
 ```
 
-### Static Analysis
+Executes the full test suite (unit and integration tests).
 
-```
+### Static Analysis
+```bash
 mvn checkstyle:check
 mvn spotbugs:check
 ```
 
-### Package
+Runs code style validation and bug detection analysis.
 
+### Generate Coverage Report
+```bash
+mvn test jacoco:report
 ```
+
+Generates code coverage report in `target/site/jacoco/index.html`.
+
+### Package
+```bash
 mvn package
 ```
 
-### Run
+Builds the executable JAR file.
 
-```
+### Run the Application
+```bash
 java -jar target/task-manager-cli-1.0.0.jar
 ```
 
+Launches the CLI application.
+
 ### Generate Documentation
-
-```
+```bash
 mvn javadoc:javadoc
-open target/site/apidocs/index.html
 ```
 
----
-
-### Technologies Used
-
-* **Language: Java 17**
-  Primary programming language used to implement the CLI application.
-
-* **Build Tool: Maven 3.9.6**
-  Handles compilation, dependency management, packaging and plugin execution.
-
-* **Testing Framework: JUnit 5 (Jupiter)**
-  Used to write and execute unit tests for the application logic.
-
-* **Static Style Analysis: Checkstyle**
-  Ensures code style consistency according to standard Java conventions.
-
-* **Static Bug Analysis: SpotBugs**
-  Detects potential defects by analyzing the compiled bytecode.
-
-* **CI/CD Platform: GitLab CI/CD**
-  Automates the entire pipeline including build, verification, testing, packaging, release and documentation.
-
-* **Containerization: Docker**
-  Used to build and publish the application as a Docker image in the release stage.
-
-* **Documentation Hosting: GitLab Pages**
-  Publishes the generated Javadoc as a static documentation website.
+Generates API documentation. Open `target/site/apidocs/index.html` in a browser to view it.
 
 ---
