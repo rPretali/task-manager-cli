@@ -260,13 +260,6 @@ mvn clean compile
 
 Compiles the source code and downloads dependencies.
 
-### Run Tests
-```bash
-mvn test
-```
-
-Executes the full test suite (unit and integration tests).
-
 ### Static Analysis
 ```bash
 mvn checkstyle:check
@@ -281,6 +274,13 @@ mvn test jacoco:report
 ```
 
 Generates code coverage report in `target/site/jacoco/index.html`.
+
+### Run Tests
+```bash
+mvn test
+```
+
+Executes the full test suite (unit and integration tests).
 
 ### Package
 ```bash
