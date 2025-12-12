@@ -209,7 +209,7 @@ release:
     - echo "Using Docker client:"
     - docker version
     # Authenticate to the GitLab Container Registry.
-    - docker login -u gitlab-ci-token -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
+    - echo "$CI_JOB_TOKEN" | docker login -u gitlab-ci-token --password-stdin "$CI_REGISTRY"
     # Build the Docker image using the Dockerfile in the repository root.
     - docker build -t "$CONTAINER_IMAGE" .
     # Push the image so that it can be used by the deploy stage or other environments.
